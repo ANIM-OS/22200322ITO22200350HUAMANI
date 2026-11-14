@@ -4,6 +4,7 @@ import dev.dreamteam.a22200322_ito_22200350_huamani.apod.data.*
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.data.local.ApodDao
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.data.local.ApodEntity
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.data.remote.ApodApi
+import dev.dreamteam.a22200322_ito_22200350_huamani.apod.data.remote.ApodArchiveApi
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.data.remote.ApodDto
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
@@ -100,6 +101,35 @@ class ApodRepositoryTest {
             repository.synchronize(repository.currentRange())
             fail("Expected cancellation")
         } catch (_: CancellationException) { }
+    }
+
+    @Test fun nasaLogoResponseIsRecoveredFromOfficialArchiveForTheSameDates() = runBlocking {
+        val primary = FakeApi(listOf(dto("2026-11-14").copy(title = "NASA Science",
+            url = "https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png")))
+        var archiveDates: List<String>? = null
+        val archive = object : ApodArchiveApi {
+            override suspend fun getRange(startDate: String, endDate: String): List<ApodDto?> {
+                archiveDates = listOf(startDate, endDate)
+                return listOf(dto("2026-11-14").copy(title = "Apollo 12", hdUrl = "https://assets.science.nasa.gov/moon.jpg"))
+            }
+        }
+        val repository = ApodRepository(primary, MemoryDao(), "test-key", clock, archive)
+        assertEquals(ApodSyncResult(1, 0, true), repository.synchronize(repository.currentRange()))
+        assertEquals(listOf("261108", "261114"), archiveDates)
+        assertEquals("Apollo 12", repository.observeImages(repository.currentRange()).first().single().title)
+    }
+
+    @Test fun gatewayFailureCanRecoverWithoutErasingLocalFavorites() = runBlocking {
+        val primary = FakeApi(emptyList()).apply { failure = IOException("unavailable") }
+        val archive = object : ApodArchiveApi {
+            override suspend fun getRange(startDate: String, endDate: String) = listOf(dto("2026-11-14"))
+        }
+        val dao = MemoryDao()
+        dao.mergeFromApi(listOf(entity("2026-11-01")))
+        dao.toggleFavorite("2026-11-01")
+        val repository = ApodRepository(primary, dao, "test-key", clock, archive)
+        assertTrue(repository.synchronize(repository.currentRange()).usedOfficialArchive)
+        assertEquals("2026-11-01", repository.observeFavorites().first().single().date)
     }
 
     private fun dto(date: String) = ApodDto(date = date, title = "Imagen", mediaType = "image")
