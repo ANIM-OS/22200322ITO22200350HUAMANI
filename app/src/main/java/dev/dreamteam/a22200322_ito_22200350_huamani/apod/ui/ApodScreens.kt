@@ -65,7 +65,7 @@ fun ApodFavoritesRoute(viewModel: ApodViewModel, onBack: () -> Unit, onOpenDetai
 @Composable
 fun ApodDetailRoute(viewModel: ApodViewModel, date: String, onBack: () -> Unit) {
     val detailFlow = remember(viewModel, date) { viewModel.detail(date) }
-    val state by detailFlow.collectAsStateWithLifecycle(initialValue = ApodDetailState())
+    val state by detailFlow.collectAsStateWithLifecycle()
     val actionError by viewModel.actionError.collectAsStateWithLifecycle()
     ApodDetailScreen(state, actionError, viewModel::dismissActionError, onBack, viewModel::toggleFavorite)
 }

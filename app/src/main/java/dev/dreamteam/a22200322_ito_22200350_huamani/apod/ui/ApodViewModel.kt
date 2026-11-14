@@ -59,12 +59,13 @@ class ApodViewModel(private val repository: ApodRepository) : ViewModel() {
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ApodListState())
 
-    fun detail(date: String): Flow<ApodDetailState> = repository.observeDetail(date)
+    fun detail(date: String): StateFlow<ApodDetailState> = repository.observeDetail(date)
         .map { ApodDetailState(image = it, isLoading = false) }
         .catch {
             if (it is CancellationException) throw it
             emit(ApodDetailState(isLoading = false, error = "No se pudo leer esta imagen de la base local."))
         }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ApodDetailState())
 
     fun refresh() {
         if (refreshJob?.isActive == true) return
