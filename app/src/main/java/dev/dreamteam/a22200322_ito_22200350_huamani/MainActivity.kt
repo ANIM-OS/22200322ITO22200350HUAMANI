@@ -13,6 +13,12 @@ import dev.dreamteam.a22200322_ito_22200350_huamani.apod.ui.ApodDetailRoute
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.ui.ApodFavoritesRoute
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.ui.ApodListRoute
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.ui.ApodViewModel
+import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.data.AsteroidRepository
+import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.data.remote.AsteroidApiService
+import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.ui.AsteroidDetailScreen
+import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.ui.AsteroidListScreen
+import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.ui.AsteroidViewModel
+import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.ui.FavoriteAsteroidsScreen
 import dev.dreamteam.a22200322_ito_22200350_huamani.core.database.AppDatabase
 import dev.dreamteam.a22200322_ito_22200350_huamani.core.navigation.AppRoutes
 import dev.dreamteam.a22200322_ito_22200350_huamani.core.navigation.NasaApp
@@ -32,6 +38,14 @@ class MainActivity : ComponentActivity() {
                 )
             }
             val apodViewModel: ApodViewModel = viewModel(factory = ApodViewModel.Factory(repository))
+            val asteroidRepository = remember {
+                AsteroidRepository(
+                    NasaNetwork.retrofit.create(AsteroidApiService::class.java),
+                    AppDatabase.getInstance(applicationContext).asteroidDao(),
+                    BuildConfig.NASA_API_KEY,
+                )
+            }
+            val asteroidViewModel: AsteroidViewModel = viewModel(factory = AsteroidViewModel.Factory(asteroidRepository))
             _22200322ITO22200350HUAMANITheme {
                 NasaApp(
                     images = { nav ->
@@ -39,6 +53,13 @@ class MainActivity : ComponentActivity() {
                             apodViewModel,
                             onOpenFavorites = { nav.navigate(AppRoutes.FAVORITES) { launchSingleTop = true } },
                             onOpenDetail = { nav.navigate(AppRoutes.imageDetail(it)) },
+                        )
+                    },
+                    asteroids = { nav ->
+                        AsteroidListScreen(
+                            viewModel = asteroidViewModel,
+                            onAsteroidClick = { nav.navigate(AppRoutes.asteroidDetail(it)) },
+                            onFavoritesClick = { nav.navigate(AppRoutes.ASTEROID_FAVORITES) { launchSingleTop = true } },
                         )
                     },
                     extraDestinations = { nav ->
@@ -49,6 +70,20 @@ class MainActivity : ComponentActivity() {
                         composable(AppRoutes.IMAGE_DETAIL) { entry ->
                             ApodDetailRoute(apodViewModel, entry.arguments?.getString("date").orEmpty(),
                                 onBack = { nav.popBackStack() })
+                        }
+                        composable(AppRoutes.ASTEROID_FAVORITES) {
+                            FavoriteAsteroidsScreen(
+                                viewModel = asteroidViewModel,
+                                onAsteroidClick = { nav.navigate(AppRoutes.asteroidDetail(it)) },
+                                onBack = { nav.popBackStack() },
+                            )
+                        }
+                        composable(AppRoutes.ASTEROID_DETAIL) { entry ->
+                            AsteroidDetailScreen(
+                                viewModel = asteroidViewModel,
+                                asteroidId = entry.arguments?.getString("asteroidId").orEmpty(),
+                                onBack = { nav.popBackStack() },
+                            )
                         }
                     },
                 )

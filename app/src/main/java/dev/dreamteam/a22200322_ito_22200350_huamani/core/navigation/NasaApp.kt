@@ -1,5 +1,6 @@
 package dev.dreamteam.a22200322_ito_22200350_huamani.core.navigation
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -17,7 +18,10 @@ object AppRoutes {
     const val ASTEROIDS = "asteroides"
     const val FAVORITES = "imagenes/favoritas"
     const val IMAGE_DETAIL = "imagenes/detalle/{date}"
+    const val ASTEROID_FAVORITES = "asteroides/favoritos"
+    const val ASTEROID_DETAIL = "asteroides/detalle/{asteroidId}"
     fun imageDetail(date: String) = "imagenes/detalle/$date"
+    fun asteroidDetail(id: String) = "asteroides/detalle/${Uri.encode(id)}"
 }
 
 @Composable
