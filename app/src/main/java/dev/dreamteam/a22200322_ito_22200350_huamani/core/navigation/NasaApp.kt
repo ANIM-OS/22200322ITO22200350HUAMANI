@@ -3,6 +3,7 @@ package dev.dreamteam.a22200322_ito_22200350_huamani.core.navigation
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -46,7 +47,7 @@ fun NasaApp(
             }
         }
     }) { padding ->
-        NavHost(navController, startDestination = AppRoutes.IMAGES, modifier = Modifier.padding(padding)) {
+        NavHost(navController, startDestination = AppRoutes.IMAGES, modifier = Modifier.padding(padding).consumeWindowInsets(padding)) {
             composable(AppRoutes.IMAGES) { images(navController) }
             composable(AppRoutes.ASTEROIDS) { asteroids(navController) }
             extraDestinations(navController)
