@@ -77,3 +77,12 @@ Referencias oficiales:
 - [Archivo de imágenes APOD](https://science.nasa.gov/apod/archive/).
 
 La interfaz de Imágenes utiliza una paleta nocturna, portada destacada, tarjetas compactas para los otros días, fechas localizadas y corazones de favoritos. Se conservan lista, detalle completo, videos y navegación inferior.
+
+
+## Explorar otras fechas
+
+La vista inicial de Imágenes mantiene los últimos siete días del enunciado. El botón **Explorar otras fechas** abre el archivo APOD, inicialmente con los últimos 30 días.
+
+Introduce **Desde** y **Hasta** en formato `AAAA-MM-DD` y toca **Consultar archivo**. Se puede explorar desde el 16 de junio de 1995 hasta hoy, en intervalos de hasta 31 días por consulta (límite de esta pantalla para mantener peticiones manejables). Para recorrer otras épocas, cambia las fechas y vuelve a consultar.
+
+Los resultados se ordenan del más reciente al más antiguo y se leen desde Room. Comparten el detalle y los favoritos con la vista semanal. La consulta del archivo tiene su propio rango y estado de carga: no modifica el período inicial de siete días.
