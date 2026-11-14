@@ -41,6 +41,50 @@ class ApodViewModel(private val repository: ApodRepository) : ViewModel() {
     private val mutableActionError = MutableStateFlow<String?>(null)
     val actionError: StateFlow<String?> = mutableActionError.asStateFlow()
     private var refreshJob: Job? = null
+    private val archiveRange = MutableStateFlow(repository.currentRange().let { it.copy(start = it.end.minusDays(29)) })
+    private val archiveRefreshState = MutableStateFlow(RefreshState())
+    private var archiveJob: Job? = null
+
+    val archiveImages: StateFlow<ApodListState> = archiveRange.flatMapLatest { dates ->
+        combine(repository.observeImages(dates), archiveRefreshState) { items, refresh ->
+            ApodListState(items, refresh.loading, refresh.message, refresh.failed, dates)
+        }
+    }.catch {
+        if (it is CancellationException) throw it
+        emit(ApodListState(isLoading = false, message = "No se pudo leer el archivo local.", range = archiveRange.value))
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ApodListState(range = archiveRange.value))
+
+    fun searchArchive(start: String, end: String) {
+        if (archiveJob?.isActive == true) return
+        val dates = try {
+            ApodDateRange.archive(start, end, repository.currentRange().end)
+        } catch (error: IllegalArgumentException) {
+            archiveRefreshState.value = RefreshState(message = error.message)
+            return
+        }
+        archiveJob = viewModelScope.launch {
+            archiveRefreshState.value = RefreshState(loading = true)
+            archiveRange.value = dates
+            try {
+                val result = repository.synchronize(dates)
+                archiveRefreshState.value = RefreshState(message = when {
+                    result.saved == 0 -> "NASA no devolvió imágenes válidas para estas fechas. Se conservan los datos locales."
+                    result.usedOfficialArchive -> "Imágenes recuperadas del archivo oficial de NASA."
+                    result.skipped > 0 -> "Se omitieron registros incompletos; las imágenes válidas están guardadas."
+                    else -> null
+                })
+            } catch (error: CancellationException) {
+                throw error
+            } catch (error: Exception) {
+                archiveRefreshState.value = RefreshState(message = userMessage(error), failed = true)
+            }
+        }
+    }
+
+    fun refreshArchive() {
+        val dates = archiveRange.value
+        searchArchive(dates.start.toString(), dates.end.toString())
+    }
 
     val images: StateFlow<ApodListState> = range.flatMapLatest { dates ->
         combine(repository.observeImages(dates), refreshState) { items, refresh ->
