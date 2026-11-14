@@ -7,6 +7,25 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class ApodDtoTest {
+    @Test fun migratedNasaArticleUsesItsActualImageAndDecodesHtml() {
+        val entity = requireNotNull(ApodDto(
+            date = "2026-11-14", title = "Moon &amp; stars",
+            explanation = "<p>First paragraph.</p><p>Full <b>explanation</b>.</p>",
+            mediaType = "image", url = "https://science.nasa.gov/image-article/apod-example/",
+            hdUrl = "https://assets.science.nasa.gov/photo.jpg", credit = "<a>NASA</a>",
+        ).toEntityOrNull())
+        assertEquals("Moon & stars", entity.title)
+        assertEquals("First paragraph. Full explanation.", entity.explanation)
+        assertNull(entity.url)
+        assertEquals("https://assets.science.nasa.gov/photo.jpg", entity.hdUrl)
+        assertEquals("NASA", entity.copyright)
+    }
+
+    @Test fun nasaHomepageLogoIsNeverTreatedAsAnAstronomyPicture() {
+        assertNull(ApodDto(date = "2026-11-14", title = "NASA Science", mediaType = "image",
+            url = "https://science.nasa.gov/wp-content/themes/nasa-child/assets/images/nasa-logo@2x.png").toEntityOrNull())
+    }
+
     @Test fun missingFieldsHaveSafeDefaults() {
         val dto = Gson().fromJson("""{"date":"2026-11-14","title":null,"explanation":null,"url":null}""", ApodDto::class.java)
         val entity = requireNotNull(dto.toEntityOrNull())

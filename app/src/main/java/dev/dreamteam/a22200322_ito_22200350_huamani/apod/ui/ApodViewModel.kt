@@ -77,6 +77,7 @@ class ApodViewModel(private val repository: ApodRepository) : ViewModel() {
                 val result = repository.synchronize(dates)
                 val message = when {
                     result.saved == 0 -> "NASA no devolvió datos válidos para estos días. Se conservan los datos locales disponibles."
+                    result.usedOfficialArchive -> "Imágenes recuperadas del archivo oficial de NASA. El servicio APOD principal está devolviendo contenido incompleto."
                     result.skipped > 0 -> "Se omitieron registros incompletos o repetidos; los datos válidos ya están guardados."
                     else -> null
                 }
