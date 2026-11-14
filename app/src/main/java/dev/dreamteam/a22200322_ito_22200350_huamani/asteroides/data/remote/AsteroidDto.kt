@@ -5,7 +5,7 @@ import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.data.local.Astero
 import java.time.LocalDate
 
 data class AsteroidFeedDto(
-    @SerializedName("near_earth_objects") val nearEarthObjects: Map<String, List<AsteroidDto>?>? = null,
+    @SerializedName("near_earth_objects") val nearEarthObjects: Map<String, List<AsteroidDto?>?>? = null,
 )
 
 data class AsteroidDto(
@@ -13,7 +13,7 @@ data class AsteroidDto(
     @SerializedName("name") val name: String? = null,
     @SerializedName("is_potentially_hazardous_asteroid") val isPotentiallyHazardous: Boolean? = null,
     @SerializedName("estimated_diameter") val estimatedDiameter: EstimatedDiameterDto? = null,
-    @SerializedName("close_approach_data") val closeApproachData: List<CloseApproachDto>? = null,
+    @SerializedName("close_approach_data") val closeApproachData: List<CloseApproachDto?>? = null,
 )
 
 data class EstimatedDiameterDto(
@@ -43,8 +43,7 @@ data class MissDistanceDto(
 fun AsteroidDto.toEntity(feedDate: String): AsteroidEntity? {
     val asteroidId = id?.trim()?.takeIf(String::isNotEmpty) ?: return null
     val date = runCatching { LocalDate.parse(feedDate) }.getOrNull() ?: return null
-    val approach = closeApproachData.orEmpty().firstOrNull { it.date == feedDate }
-        ?: closeApproachData.orEmpty().firstOrNull()
+    val approach = closeApproachData.orEmpty().firstOrNull { it?.date == feedDate }
     val meters = estimatedDiameter?.meters
 
     return AsteroidEntity(
@@ -55,7 +54,7 @@ fun AsteroidDto.toEntity(feedDate: String): AsteroidEntity? {
         diameterMaxMeters = meters?.max.validNonNegative(),
         velocityKmH = approach?.relativeVelocity?.kilometersPerHour.toValidNonNegativeDouble(),
         distanceKm = approach?.missDistance?.kilometers.toValidNonNegativeDouble(),
-        isPotentiallyHazardous = isPotentiallyHazardous == true,
+        isPotentiallyHazardous = isPotentiallyHazardous,
     )
 }
 

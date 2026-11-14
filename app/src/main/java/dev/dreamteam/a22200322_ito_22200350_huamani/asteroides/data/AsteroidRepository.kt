@@ -34,7 +34,8 @@ class AsteroidRepository(
             val groups = response.body()?.nearEarthObjects
                 ?: throw AsteroidSyncException("La respuesta de NASA no incluye asteroides.")
             val items = groups.flatMap { (date, asteroids) ->
-                asteroids.orEmpty().mapNotNull { it.toEntity(date) }
+                if (date < startDate.toString() || date > endDate.toString()) emptyList()
+                else asteroids.orEmpty().mapNotNull { it?.toEntity(date) }
             }
             if (groups.values.any { !it.isNullOrEmpty() } && items.isEmpty()) {
                 throw AsteroidSyncException("NASA devolvió datos de asteroides incompletos.")
@@ -43,7 +44,7 @@ class AsteroidRepository(
             val unique = items.groupBy { it.id }.values.map { records ->
                 records.maxBy { it.approachDate }
             }
-            dao.saveFeedPreservingFavorites(unique, startDate.toString(), endDate.toString())
+            dao.saveFeedPreservingFavorites(unique)
         } catch (error: CancellationException) {
             throw error
         } catch (error: AsteroidSyncException) {

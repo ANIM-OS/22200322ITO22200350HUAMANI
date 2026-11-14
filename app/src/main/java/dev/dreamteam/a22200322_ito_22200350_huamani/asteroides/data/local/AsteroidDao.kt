@@ -24,8 +24,8 @@ interface AsteroidDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(asteroids: List<AsteroidEntity>)
 
-    @Query("DELETE FROM asteroids WHERE isFavorite = 0 AND approachDate NOT BETWEEN :startDate AND :endDate")
-    suspend fun removeOldNonFavorites(startDate: String, endDate: String)
+    @Query("DELETE FROM asteroids WHERE isFavorite = 0")
+    suspend fun removeNonFavorites()
 
     @Query("UPDATE asteroids SET isFavorite = NOT isFavorite WHERE id = :id")
     suspend fun toggleFavorite(id: String)
@@ -33,11 +33,9 @@ interface AsteroidDao {
     @Transaction
     suspend fun saveFeedPreservingFavorites(
         asteroids: List<AsteroidEntity>,
-        startDate: String,
-        endDate: String,
     ) {
         val favorites = favoriteIds().toSet()
+        removeNonFavorites()
         insertAll(asteroids.map { it.copy(isFavorite = it.id in favorites) })
-        removeOldNonFavorites(startDate, endDate)
     }
 }

@@ -13,6 +13,6 @@ data class AsteroidEntity(
     val diameterMaxMeters: Double?,
     val velocityKmH: Double?,
     val distanceKm: Double?,
-    val isPotentiallyHazardous: Boolean,
+    val isPotentiallyHazardous: Boolean?,
     val isFavorite: Boolean = false,
 )
