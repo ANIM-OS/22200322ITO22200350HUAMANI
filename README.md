@@ -14,10 +14,22 @@ Aplicación Android existente en Kotlin y Jetpack Compose. minSdk 34; compile/ta
 ## Equipo
 
 - Alumno 1 (`ANIM-OS`): base compartida, navegación principal, Retrofit, Room, Gradle y módulo `apod/`.
-- Alumno 2 (`brayan-ht`): módulo `asteroides/` en sus propios archivos.
+- Alumno 2 (`brayan-ht`): módulo `asteroides/` e integración final de ambos módulos.
 - Contrato propuesto y puntos de integración: [docs/INTEGRACION.md](docs/INTEGRACION.md).
 
-Trabajar mediante `setup/base` y `feature/imagenes`, con PR hacia `main`. No hacer commits directos sobre `main`.
+Los PR #1 (`setup/base`), #2 (`feature/asteroides`) y #3 (`feature/imagenes`) ya están fusionados en `main`. La integración final se entrega desde `feature/integracion-final` mediante un PR independiente hacia `main`, a cargo del integrante 2. No hacer commits directos sobre `main`.
+
+## Integración final
+
+Una sola `AppDatabase` contiene las tablas `apod` y `asteroids`. La versión 2 agrega Asteroides mediante una migración 1→2 que conserva los datos y favoritos APOD. Ambos módulos usan `NasaNetwork.retrofit` y `BuildConfig.NASA_API_KEY`; sus repositorios sincronizan los últimos siete días con Room, y las pantallas observan Room mediante `StateFlow`.
+
+La barra inferior conserva **Imágenes** y **Asteroides**. Asteroides incluye lista, filtro de potencialmente peligrosos, detalle y **Mis asteroides** con favoritos persistentes. La prueba instrumentada `AppDatabaseMigrationTest` valida la migración, ambos DAO y la conservación de favoritos. Para verificar la entrega:
+
+```sh
+./gradlew :app:assembleDebug
+./gradlew :app:testDebugUnitTest
+./gradlew :app:connectedDebugAndroidTest # requiere emulador o dispositivo
+```
 
 
 ## Imágenes APOD
