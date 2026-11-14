@@ -6,10 +6,10 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.migration.Migration
 import androidx.sqlite.db.SupportSQLiteDatabase
-import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.data.local.AsteroidDao
-import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.data.local.AsteroidEntity
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.data.local.ApodDao
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.data.local.ApodEntity
+import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.data.local.AsteroidDao
+import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.data.local.AsteroidEntity
 
 @Database(entities = [ApodEntity::class, AsteroidEntity::class], version = 2, exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
@@ -17,8 +17,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun asteroidDao(): AsteroidDao
 
     companion object {
-        // Añade Asteroides sin recrear APOD ni perder favoritos existentes.
-        val MIGRATION_1_2: Migration = object : Migration(1, 2) {
+        val MIGRATION_1_2 = object : Migration(1, 2) {
             override fun migrate(db: SupportSQLiteDatabase) {
                 db.execSQL(
                     """CREATE TABLE IF NOT EXISTS `asteroids` (
