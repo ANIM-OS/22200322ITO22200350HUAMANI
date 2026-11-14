@@ -17,6 +17,7 @@ import dev.dreamteam.a22200322_ito_22200350_huamani.apod.data.remote.ApodArchive
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.ui.ApodDetailRoute
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.ui.ApodFavoritesRoute
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.ui.ApodListRoute
+import dev.dreamteam.a22200322_ito_22200350_huamani.apod.ui.ApodArchiveRoute
 import dev.dreamteam.a22200322_ito_22200350_huamani.apod.ui.ApodViewModel
 import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.data.AsteroidRepository
 import dev.dreamteam.a22200322_ito_22200350_huamani.asteroides.data.remote.AsteroidApiService
@@ -64,6 +65,7 @@ class MainActivity : ComponentActivity() {
                         ApodListRoute(
                             apodViewModel,
                             onOpenFavorites = { nav.navigate(AppRoutes.FAVORITES) { launchSingleTop = true } },
+                            onOpenArchive = { nav.navigate(AppRoutes.IMAGE_ARCHIVE) { launchSingleTop = true } },
                             onOpenDetail = { nav.navigate(AppRoutes.imageDetail(it)) },
                         )
                     },
@@ -77,6 +79,13 @@ class MainActivity : ComponentActivity() {
                         )
                     },
                     extraDestinations = { nav ->
+                        composable(AppRoutes.IMAGE_ARCHIVE) {
+                            ApodArchiveRoute(
+                                apodViewModel, onBack = { nav.popBackStack() },
+                                onOpenFavorites = { nav.navigate(AppRoutes.FAVORITES) { launchSingleTop = true } },
+                                onOpenDetail = { nav.navigate(AppRoutes.imageDetail(it)) },
+                            )
+                        }
                         composable(AppRoutes.ASTEROID_FAVORITES) {
                             FavoriteAsteroidsScreen(
                                 viewModel = asteroidViewModel,

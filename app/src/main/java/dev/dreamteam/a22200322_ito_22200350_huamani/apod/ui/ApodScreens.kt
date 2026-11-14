@@ -12,6 +12,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +40,7 @@ fun ApodListRoute(
     viewModel: ApodViewModel,
     onOpenFavorites: () -> Unit,
     onOpenDetail: (String) -> Unit,
+    onOpenArchive: () -> Unit,
 ) {
     val state by viewModel.images.collectAsStateWithLifecycle()
     val actionError by viewModel.actionError.collectAsStateWithLifecycle()
@@ -53,6 +55,43 @@ fun ApodListRoute(
         onBack = {},
         onOpenDetail = onOpenDetail,
         onToggleFavorite = viewModel::toggleFavorite,
+        onOpenArchive = onOpenArchive,
+    )
+}
+
+@Composable
+fun ApodArchiveRoute(
+    viewModel: ApodViewModel,
+    onBack: () -> Unit,
+    onOpenFavorites: () -> Unit,
+    onOpenDetail: (String) -> Unit,
+) {
+    val state by viewModel.archiveImages.collectAsStateWithLifecycle()
+    val actionError by viewModel.actionError.collectAsStateWithLifecycle()
+    var start by rememberSaveable { mutableStateOf(state.range?.start.toString()) }
+    var end by rememberSaveable { mutableStateOf(state.range?.end.toString()) }
+    LaunchedEffect(viewModel) { viewModel.refreshArchive() }
+    ApodListScreen(
+        state = state, favoritesOnly = false, archiveMode = true,
+        actionError = actionError, onDismissError = viewModel::dismissActionError,
+        onRefresh = viewModel::refreshArchive, onOpenFavorites = onOpenFavorites,
+        onBack = onBack, onOpenDetail = onOpenDetail, onToggleFavorite = viewModel::toggleFavorite,
+        archiveControls = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(value = start, onValueChange = { start = it }, label = { Text("Desde") },
+                        placeholder = { Text("AAAA-MM-DD") }, singleLine = true, enabled = !state.isLoading,
+                        modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = end, onValueChange = { end = it }, label = { Text("Hasta") },
+                        placeholder = { Text("AAAA-MM-DD") }, singleLine = true, enabled = !state.isLoading,
+                        modifier = Modifier.weight(1f))
+                }
+                Text("Desde el 16 de junio de 1995 hasta hoy. Hasta 31 días por consulta.",
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Button(onClick = { viewModel.searchArchive(start, end) }, enabled = !state.isLoading,
+                    modifier = Modifier.fillMaxWidth()) { Text("Consultar archivo") }
+            }
+        },
     )
 }
 
@@ -92,10 +131,13 @@ private fun ApodListScreen(
     onBack: () -> Unit,
     onOpenDetail: (String) -> Unit,
     onToggleFavorite: (String) -> Unit,
+    archiveMode: Boolean = false,
+    onOpenArchive: (() -> Unit)? = null,
+    archiveControls: @Composable () -> Unit = {},
 ) {
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (favoritesOnly) RoundAction(SpaceSymbol.Back, "Volver", onBack)
+            if (favoritesOnly || archiveMode) RoundAction(SpaceSymbol.Back, "Volver", onBack)
             else SpaceIcon(SpaceSymbol.Orbit, Modifier.size(30.dp), MaterialTheme.colorScheme.primary)
             Spacer(Modifier.width(10.dp))
             Column(Modifier.weight(1f)) {
@@ -115,12 +157,22 @@ private fun ApodListScreen(
         ) {
             item {
                 Column(Modifier.padding(top = 18.dp, bottom = 6.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(if (favoritesOnly) "TUS FAVORITOS" else "EXPLORA · NASA APOD", color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.labelSmall, letterSpacing = 2.sp)
-                    Text(if (favoritesOnly) "Mis imágenes\nfavoritas" else "Tu ventana\nal universo.", fontSize = 36.sp, lineHeight = 41.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-1).sp)
-                    Text(if (favoritesOnly) "Los descubrimientos que elegiste guardar." else "Siete días de imágenes e historias para mirar más allá.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(if (favoritesOnly) "TUS FAVORITOS" else if (archiveMode) "ARCHIVO · NASA APOD" else "EXPLORA · NASA APOD", color = MaterialTheme.colorScheme.secondary, style = MaterialTheme.typography.labelSmall, letterSpacing = 2.sp)
+                    Text(if (favoritesOnly) "Mis imágenes\nfavoritas" else if (archiveMode) "El universo,\na tu ritmo." else "Tu ventana\nal universo.", fontSize = 36.sp, lineHeight = 41.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-1).sp)
+                    Text(if (favoritesOnly) "Los descubrimientos que elegiste guardar." else if (archiveMode) "Descubre imágenes e historias de otras fechas." else "Siete días de imágenes e historias para mirar más allá.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                        LabelPill(if (favoritesOnly) "${state.images.size} guardadas" else "Últimos 7 días")
+                        LabelPill(if (favoritesOnly) "${state.images.size} guardadas" else if (archiveMode) "Rango elegido" else "Últimos 7 días")
                         state.range?.let { Text("${formatDate(it.start.toString(), "d MMM")} — ${formatDate(it.end.toString(), "d MMM")}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                    }
+                }
+            }
+            if (archiveMode) item { archiveControls() }
+            onOpenArchive?.let { open ->
+                item {
+                    OutlinedButton(onClick = open, modifier = Modifier.fillMaxWidth(), shape = RoundedCornerShape(18.dp)) {
+                        SpaceIcon(SpaceSymbol.Calendar, Modifier.size(18.dp))
+                        Spacer(Modifier.width(10.dp))
+                        Text("Explorar otras fechas")
                     }
                 }
             }
@@ -137,7 +189,7 @@ private fun ApodListScreen(
                 else -> {
                     item {
                         Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(if (favoritesOnly) "Tu colección" else "Imágenes de la semana", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                            Text(if (favoritesOnly) "Tu colección" else if (archiveMode) "Resultados del archivo" else "Imágenes de la semana", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                             Text("${state.images.size} descubrimientos", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }

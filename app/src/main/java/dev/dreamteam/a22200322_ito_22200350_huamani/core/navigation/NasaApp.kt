@@ -24,6 +24,7 @@ object AppRoutes {
     const val IMAGES = "imagenes"
     const val ASTEROIDS = "asteroides"
     const val FAVORITES = "imagenes/favoritas"
+    const val IMAGE_ARCHIVE = "imagenes/archivo"
     const val IMAGE_DETAIL = "imagenes/detalle/{date}"
     const val ASTEROID_FAVORITES = "asteroides/favoritos"
     const val ASTEROID_DETAIL = "asteroides/detalle/{asteroidId}"

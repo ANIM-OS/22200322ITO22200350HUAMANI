@@ -15,10 +15,25 @@ import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.withContext
 import java.time.Clock
 import java.time.LocalDate
+import java.time.temporal.ChronoUnit
 
 data class ApodDateRange(val start: LocalDate, val end: LocalDate) {
     companion object {
         fun lastSevenDays(today: LocalDate) = ApodDateRange(today.minusDays(6), today)
+
+        fun archive(start: String, end: String, today: LocalDate): ApodDateRange {
+            val from = try { LocalDate.parse(start.trim()) } catch (_: Exception) {
+                throw IllegalArgumentException("Escribe la fecha inicial como AAAA-MM-DD.")
+            }
+            val to = try { LocalDate.parse(end.trim()) } catch (_: Exception) {
+                throw IllegalArgumentException("Escribe la fecha final como AAAA-MM-DD.")
+            }
+            require(!from.isBefore(LocalDate.of(1995, 6, 16))) { "El archivo APOD empieza el 16 de junio de 1995." }
+            require(!to.isBefore(from)) { "La fecha final debe ser igual o posterior a la inicial." }
+            require(!to.isAfter(today)) { "Elige fechas hasta hoy; no hay imágenes futuras." }
+            require(ChronoUnit.DAYS.between(from, to) < 31) { "Elige hasta 31 días por consulta." }
+            return ApodDateRange(from, to)
+        }
     }
 }
 
