@@ -32,3 +32,10 @@ Solo integrante 1 modifica `MainActivity.kt`, `core/database/`, `core/network/`,
 ## Revisión
 
 Solicitar revisión, comentario sobre este contrato y aprobación de `setup/base` antes de integrar la base. El PR `feature/imagenes` se dirige a `main` y depende del PR inicial. La aprobación debe realizarla el otro integrante; el autor no se autoaprueba ni fusiona sin revisión.
+
+
+## APOD implementado en feature/imagenes
+
+`MainActivity` crea `ApodRepository` usando el Retrofit y el DAO compartidos, y proporciona una única instancia de `ApodViewModel` a las rutas de lista, detalle y favoritos. Los destinos internos son `AppRoutes.FAVORITES` y `AppRoutes.IMAGE_DETAIL`; el argumento del detalle es `date` (fecha ISO).
+
+El slot `asteroids` de `NasaApp` sigue disponible para conectar el módulo del integrante 2. Este cambio no modifica sus archivos ni registra sus Entities antes de incorporar su PR. La base Room continúa en v1, sin cambios de esquema respecto al PR inicial.
